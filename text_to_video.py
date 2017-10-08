@@ -3,7 +3,6 @@ import textwrap
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-from mutagen.mp3 import MP3
 
 FONT_PATH = '/Library/Fonts/genshingothic-20150607/GenShinGothic-Bold.ttf'
 FONT_SIZE = 72
@@ -17,8 +16,6 @@ def generate_aiff(s, i):
     aiff_path = 'temp/sound/' + '{0:04d}'.format(i) + '.aiff'
     os.system('say -v Kyoko ' + s + ' -o ' + aiff_path)
     mp3_path = aiff_to_mp3(aiff_path)
-    mp3_length = get_mp3_length(mp3_path)
-    return mp3_length
 
 def aiff_to_mp3(aiff_path):
     mp3_path = aiff_path.replace('.aiff', '.mp3')
@@ -26,12 +23,24 @@ def aiff_to_mp3(aiff_path):
     os.system(command)
     return mp3_path
 
-def get_mp3_length(mp3_path):
-    audio = MP3(mp3_path)
-    return audio.info.length
+def generate_mp4(i):
+    mp4_path = get_mp4_path(i)
+    mp3_path = get_mp3_path(i)
+    png_path = get_png_path(i)
+    command = 'ffmpeg -framerate 60 -i {0} -i {1} {2}'.format(png_path, mp3_path, mp4_path)
+    os.system(command)
+
+def get_png_path(i):
+    return 'temp/image/' + '{0:04d}'.format(i) + '.png'
+
+def get_mp3_path(i):
+    return 'temp/sound/' + '{0:04d}'.format(i) + '.mp3'
+
+def get_mp4_path(i):
+    return 'temp/video/' + '{0:04d}'.format(i) + '.mp4'
 
 def generate_png(s, i):
-    output_path = 'temp/image/' + '{0:04d}'.format(i) + '.png'
+    output_path = get_png_path(i)
     print(output_path)
     img = Image.new('RGBA', IMAGE_SIZE)
     draw = ImageDraw.Draw(img)
@@ -59,13 +68,13 @@ def generate_png(s, i):
                 new_x = position[0] + x * offset
                 new_y = position[1] + y * offset
                 draw.text((new_x, new_y), line, BORDER_COLOR, font=font)
-        draw.text(position, line, TEXT_COLOR, font=font)
 
         # main text
         draw.text(position, line, TEXT_COLOR, font=font)
     img.save(output_path)
 
 def make_movie(file_name):
+    os.system('rm temp/video/*.mp4')
     path = 'input/' + file_name
     print(path)
     text_list = []
@@ -74,12 +83,20 @@ def make_movie(file_name):
             text_list.append(line.strip())
     print(text_list)
 
-    mp3_length_list = []
     for i, t in enumerate(text_list):
         mp3_length = generate_aiff(t, i)
         print('mp3_length', mp3_length)
-        mp3_length_list.append(mp3_length)
         generate_png(t, i)
+        generate_mp4(i)
+
+    # generate text file
+    text_path = 'temp/input.txt'
+    f = open(text_path, 'w')
+    for i in range(len(text_list)):
+        f.write('file ' + 'video/{0:04d}'.format(i) + '.mp4\n')
+    f.close()
+    # concatenate all mp4
+    os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
 
 if __name__ == '__main__':
     make_movie('sample.txt')
