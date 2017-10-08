@@ -1,5 +1,7 @@
 import os
 import textwrap
+import math
+import re
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -60,13 +62,14 @@ def generate_png(s, i):
         text_y += height
 
         # outline
-        offset = height // 10
-        x_list = [-1, 0, 1]
-        y_list = [-1, 0, 1]
+        offset = height // 20
+        #x_list = [-1, 0, 1]
+        #y_list = [-1, 0, 1]
+        x_list = y_list = [-1, -0.5, 0, 0.5, 1]
         for x in x_list:
             for y in y_list:
-                new_x = position[0] + x * offset
-                new_y = position[1] + y * offset
+                new_x = position[0] + math.floor(x * offset)
+                new_y = position[1] + math.floor(y * offset)
                 draw.text((new_x, new_y), line, BORDER_COLOR, font=font)
 
         # main text
@@ -75,12 +78,15 @@ def generate_png(s, i):
 
 def make_movie(file_name):
     os.system('rm temp/video/*.mp4')
+    os.system('rm temp/output/*.mp4')
     path = 'input/' + file_name
     print(path)
     text_list = []
     with open(path) as f:
         for line in f:
-            text_list.append(line.strip())
+            s = line.strip()
+            s = re.sub(r'《[^》]+》', "", s)
+            text_list.append(s)
     print(text_list)
 
     for i, t in enumerate(text_list):
@@ -99,5 +105,6 @@ def make_movie(file_name):
     os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
 
 if __name__ == '__main__':
-    make_movie('sample.txt')
+    #make_movie('sample.txt')
+    make_movie('miezaruteki.txt')
     #say_command('こんにちは', 3)
