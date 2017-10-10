@@ -1,2 +1,6 @@
 .idea/*
-temp/*
+temp/image/*
+temp/output/*
+temp/sound/*
+temp/video/*
+temp/input.txt
