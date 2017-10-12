@@ -4,3 +4,4 @@ temp/output/*
 temp/sound/*
 temp/video/*
 temp/mp4_input_list.txt
+input/*/*.jpg
