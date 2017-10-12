@@ -2,6 +2,7 @@ import os
 import textwrap
 import math
 import re
+import glob
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -14,14 +15,16 @@ IMAGE_SIZE = (1920, 1080)
 MAX_WORD_NUM = 100 # temp
 WORD_NUM_PER_LINE = 20
 
+insert_image_path = None
+
 def generate_aiff(s, i):
     aiff_path = 'temp/sound/' + '{0:04d}'.format(i) + '.aiff'
     os.system('say -v Kyoko ' + s + ' -o ' + aiff_path)
-    mp3_path = aiff_to_mp3(aiff_path)
+    return aiff_path
 
 def aiff_to_mp3(aiff_path):
     mp3_path = aiff_path.replace('.aiff', '.mp3')
-    command = 'lame -m m ' + aiff_path + ' ' + mp3_path
+    command = 'lame --silent -m m ' + aiff_path + ' ' + mp3_path
     os.system(command)
     return mp3_path
 
@@ -29,7 +32,7 @@ def generate_mp4(i):
     mp4_path = get_mp4_path(i)
     mp3_path = get_mp3_path(i)
     png_path = get_png_path(i)
-    command = 'ffmpeg -framerate 60 -i {0} -i {1} {2}'.format(png_path, mp3_path, mp4_path)
+    command = 'ffmpeg -loglevel quiet -framerate 60 -i {0} -i {1} {2}'.format(png_path, mp3_path, mp4_path)
     os.system(command)
 
 def get_png_path(i):
@@ -45,10 +48,12 @@ def generate_png(s, i):
     output_path = get_png_path(i)
     print(output_path)
     img = Image.new('RGBA', IMAGE_SIZE)
+    if insert_image_path is not None:
+        insert_image = Image.open(insert_image_path)
+
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
     lines = textwrap.wrap(s, width = WORD_NUM_PER_LINE)
-    text_y = 0
 
     # for centering, get info
     word_width, word_height = font.getsize('あ')
@@ -63,8 +68,6 @@ def generate_png(s, i):
 
         # outline
         offset = height // 20
-        #x_list = [-1, 0, 1]
-        #y_list = [-1, 0, 1]
         x_list = y_list = [-1, -0.5, 0, 0.5, 1]
         for x in x_list:
             for y in y_list:
@@ -77,34 +80,44 @@ def generate_png(s, i):
     img.save(output_path)
 
 def make_movie(file_name):
+    os.system('rm temp/image/*.png')
+    os.system('rm temp/sound/*')
     os.system('rm temp/video/*.mp4')
     os.system('rm temp/output/*.mp4')
     path = 'input/' + file_name
-    print(path)
     text_list = []
     with open(path) as f:
         for line in f:
             s = line.strip()
+            # delete ruby
             s = re.sub(r'《[^》]+》', "", s)
             text_list.append(s)
     print(text_list)
 
-    for i, t in enumerate(text_list):
-        mp3_length = generate_aiff(t, i)
-        print('mp3_length', mp3_length)
-        generate_png(t, i)
-        generate_mp4(i)
+    for i, text in enumerate(text_list):
+        if text == '':
+            continue
+
+        if text[0] == '[' and text[-1] == ']':
+            print('command', i)
+            insert_image_path = text[1:-2]
+            print('path', insert_image_path)
+        else:
+            aiff_path = generate_aiff(text, i)
+            aiff_to_mp3(aiff_path)
+            generate_png(text, i)
+            generate_mp4(i)
 
     # generate text file
-    text_path = 'temp/input.txt'
+    text_path = 'temp/mp4_input_list.txt'
+    mp4_path_list = glob.glob('temp/video/*.mp4')
     f = open(text_path, 'w')
-    for i in range(len(text_list)):
-        f.write('file ' + 'video/{0:04d}'.format(i) + '.mp4\n')
+    for mp4_path in mp4_path_list:
+        f.write('file ' + mp4_path + '\n')
     f.close()
     # concatenate all mp4
-    os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
+    #os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
 
 if __name__ == '__main__':
     #make_movie('sample.txt')
-    make_movie('miezaruteki.txt')
-    #say_command('こんにちは', 3)
+    make_movie('news_20171011.txt')
