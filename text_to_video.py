@@ -33,7 +33,7 @@ def generate_mp4(i):
     mp4_path = get_mp4_path(i)
     mp3_path = get_mp3_path(i)
     png_path = get_png_path(i)
-    command = 'ffmpeg -loglevel quiet -framerate 60 -i {0} -i {1} {2}'.format(png_path, mp3_path, mp4_path)
+    command = 'ffmpeg -loglevel quiet -framerate 30 -i {0} -i {1} {2}'.format(png_path, mp3_path, mp4_path)
     os.system(command)
 
 def get_png_path(i):
