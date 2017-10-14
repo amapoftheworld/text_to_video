@@ -60,7 +60,12 @@ def generate_png(s, i):
 
     # for centering, get info
     word_width, word_height = font.getsize('あ')
-    text_y = IMAGE_SIZE[1] // 2 - word_height - word_height // 2
+    row_num = len(lines)
+    print('row num', row_num)
+    if row_num % 2 == 0:
+        text_y = IMAGE_SIZE[1] // 2 - word_height * (row_num // 2)
+    else:
+        text_y = IMAGE_SIZE[1] // 2 - word_height * (row_num // 2) - word_height // 2
 
     for line in lines:
         width, height = font.getsize(line)
@@ -126,9 +131,8 @@ def make_movie(file_name):
     f.close()
     # concatenate all mp4
     start_time = time.time()
-    os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
+    #os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
     print('merge time', time.time() - start_time, 'sec')
 
 if __name__ == '__main__':
-    #make_movie('sample.txt')
-    make_movie('news_20171011.txt')
+    make_movie('sample.txt')
