@@ -51,9 +51,22 @@ def generate_png(s, i):
     img = Image.new('RGBA', IMAGE_SIZE)
     if insert_image_path is not None:
         insert_image = Image.open(insert_image_path)
-        insert_image = insert_image.resize(IMAGE_SIZE)
-        print('inset', insert_image_path)
-        img.paste(insert_image)
+        W, H = img.size
+        w, h = insert_image.size
+        offset = (0, 0)
+
+        # horizontal image
+        if img.size[0] / img.size[1] < insert_image.size[0] / insert_image.size[1]:
+            print('insert horizontal image')
+            new_width = img.size[0]
+            new_height = math.floor(insert_image.size[1] * img.size[0] / insert_image.size[0])
+            insert_image = insert_image.resize([new_width, new_height])
+            offset = (0, (H - new_height) // 2)
+        else:
+            print('insert vertical image')
+            insert_image = insert_image.resize(IMAGE_SIZE)
+            print('inset', insert_image_path)
+        img.paste(insert_image, offset)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
     lines = textwrap.wrap(s, width = WORD_NUM_PER_LINE)
@@ -135,4 +148,4 @@ def make_movie(file_name):
     print('merge time', time.time() - start_time, 'sec')
 
 if __name__ == '__main__':
-    make_movie('sample.txt')
+    make_movie('news_20171011.txt')
