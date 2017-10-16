@@ -10,8 +10,8 @@ from PIL import ImageDraw
 
 FONT_PATH = '/Library/Fonts/genshingothic-20150607/GenShinGothic-Bold.ttf'
 FONT_SIZE = 72
-TEXT_COLOR = (255, 0, 0)
-BORDER_COLOR = (255, 255, 0) # yellow
+TEXT_COLOR = (255, 255, 255)
+BORDER_COLOR = (0, 0, 0)
 IMAGE_SIZE = (1920, 1080)
 MAX_WORD_NUM = 100 # temp
 WORD_NUM_PER_LINE = 20
@@ -56,18 +56,20 @@ def generate_png(s, i):
         offset = (0, 0)
 
         # horizontal image
-        if img.size[0] / img.size[1] < insert_image.size[0] / insert_image.size[1]:
+        if W / H < w / h:
             print('insert horizontal image')
-            new_width = img.size[0]
-            new_height = math.floor(insert_image.size[1] * img.size[0] / insert_image.size[0])
+            new_width = W
+            new_height = math.floor(h * W / w)
             insert_image = insert_image.resize([new_width, new_height])
             offset = (0, (H - new_height) // 2)
+        # vertical image
         else:
             print('insert vertical image')
-            insert_image = insert_image.resize(IMAGE_SIZE)
-            print('inset', insert_image_path)
+            new_height = H
+            new_width = math.floor(w * H / h)
+            insert_image = insert_image.resize([new_width, new_height])
+            offset = ((W - new_width) // 2, 0)
         img.paste(insert_image, offset)
-    draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
     lines = textwrap.wrap(s, width = WORD_NUM_PER_LINE)
 
@@ -80,6 +82,16 @@ def generate_png(s, i):
     else:
         text_y = IMAGE_SIZE[1] // 2 - word_height * (row_num // 2) - word_height // 2
 
+    # black image
+    black_image = Image.new('RGBA', IMAGE_SIZE)
+    black_draw = ImageDraw.Draw(black_image)
+    draw_start = (0, text_y)
+    draw_end = (img.size[0], text_y + row_num * word_height + 20)
+    black_draw.rectangle((draw_start, draw_end), fill=(0, 0, 0, 127))
+    img = Image.alpha_composite(img, black_image)
+    #img.paste(black_image, offset)
+
+    draw = ImageDraw.Draw(img)
     for line in lines:
         width, height = font.getsize(line)
         text_x = IMAGE_SIZE[0] // 2 - width // 2
