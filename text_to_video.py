@@ -135,7 +135,7 @@ def make_movie(file_name):
         if text[0] == '[' and text[-1] == ']':
             command = text[1:-1]
             print('command', i, command)
-            if command.find('image:') != -1:
+            if 'image:' in command:
                 print('image insert command', command)
                 image_path = command.split(':')[-1]
                 if image_path == 'None':
@@ -143,7 +143,7 @@ def make_movie(file_name):
                     insert_image_path = None
                 else:
                     insert_image_path = image_path
-            elif command.find('speaker:') != -1:
+            elif 'speaker:' in command:
                 print('speaker change command', command)
                 speaker = command.split(':')[-1]
             else:
