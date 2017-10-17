@@ -17,10 +17,12 @@ MAX_WORD_NUM = 100 # temp
 WORD_NUM_PER_LINE = 20
 
 insert_image_path = None
+speaker = 'Kyoko'
+
 
 def generate_aiff(s, i):
     aiff_path = 'temp/sound/' + '{0:04d}'.format(i) + '.aiff'
-    os.system('say -v Kyoko ' + s + ' -o ' + aiff_path)
+    os.system('say -v {0} '.format(speaker) + s + ' -o ' + aiff_path)
     return aiff_path
 
 def aiff_to_mp3(aiff_path):
@@ -73,10 +75,9 @@ def generate_png(s, i):
     font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
     lines = textwrap.wrap(s, width = WORD_NUM_PER_LINE)
 
-    # for centering, get info
+    # for text centering
     word_width, word_height = font.getsize('あ')
     row_num = len(lines)
-    print('row num', row_num)
     if row_num % 2 == 0:
         text_y = IMAGE_SIZE[1] // 2 - word_height * (row_num // 2)
     else:
@@ -89,7 +90,6 @@ def generate_png(s, i):
     draw_end = (img.size[0], text_y + row_num * word_height + 20)
     black_draw.rectangle((draw_start, draw_end), fill=(0, 0, 0, 127))
     img = Image.alpha_composite(img, black_image)
-    #img.paste(black_image, offset)
 
     draw = ImageDraw.Draw(img)
     for line in lines:
@@ -113,7 +113,7 @@ def generate_png(s, i):
     img.save(output_path)
 
 def make_movie(file_name):
-    global insert_image_path
+    global insert_image_path, speaker
     os.system('rm temp/image/*.png')
     os.system('rm temp/sound/*')
     os.system('rm temp/video/*.mp4')
@@ -133,13 +133,21 @@ def make_movie(file_name):
             continue
 
         if text[0] == '[' and text[-1] == ']':
-            print('command', i)
-            path = text[1:-1]
-            if path == 'None':
-                print('None dane')
-                insert_image_path = None
+            command = text[1:-1]
+            print('command', i, command)
+            if command.find('image:') != -1:
+                print('image insert command', command)
+                image_path = command.split(':')[-1]
+                if image_path == 'None':
+                    print('None image')
+                    insert_image_path = None
+                else:
+                    insert_image_path = image_path
+            elif command.find('speaker:') != -1:
+                print('speaker change command', command)
+                speaker = command.split(':')[-1]
             else:
-                insert_image_path = path
+                print('command error')
         else:
             aiff_path = generate_aiff(text, i)
             aiff_to_mp3(aiff_path)
@@ -156,7 +164,7 @@ def make_movie(file_name):
     f.close()
     # concatenate all mp4
     start_time = time.time()
-    #os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
+    os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
     print('merge time', time.time() - start_time, 'sec')
 
 if __name__ == '__main__':
