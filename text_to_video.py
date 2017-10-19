@@ -162,10 +162,11 @@ def make_movie(file_name):
         mp4_path = mp4_path.replace('temp/', '')
         f.write('file ' + mp4_path + '\n')
     f.close()
+
     # concatenate all mp4
     start_time = time.time()
     os.system('ffmpeg -f concat -i {0} {1}'.format(text_path, 'temp/output/{0}.mp4'.format(file_name)))
     print('merge time', time.time() - start_time, 'sec')
 
 if __name__ == '__main__':
-    make_movie('news_20171011.txt')
+    make_movie('news_20171019.txt')

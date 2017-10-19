@@ -17,13 +17,11 @@
 
 ## Notes
 
-* Kagi Kakko is no problem
 * Rubi is no need
 * How to communicate paragraph switching
 * I want to change the color of dialogue by speaker
 * Japanese reading accuracy of the say command is not perfect...
-* Insert image
 
 ## Generated Videos
 
-[![](https://img.youtube.com/vi/LPPxQeoG2Zg/0.jpg)](https://www.youtube.com/watch?v=LPPxQeoG2Zg)
+[![](https://img.youtube.com/vi/hKXkZ565OOo/0.jpg)](https://www.youtube.com/watch?v=hKXkZ565OOo)
